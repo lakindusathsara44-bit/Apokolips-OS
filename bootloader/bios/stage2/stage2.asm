@@ -35,10 +35,10 @@ stage2_entry:
     mov si, newline
     call print_string
 
-.halt:
+stage2_halt:
     cli
     hlt
-    jmp .halt
+    jmp stage2_halt
 
 ; Returns CF=0 on success. E820 records are stored at physical 0x5000.
 ; The buffer is bounded to 32 entries x 24 bytes (768 bytes).
@@ -95,7 +95,7 @@ detect_memory_map:
 memory_map_error:
     mov si, map_error
     call print_string
-    jmp .halt
+    jmp stage2_halt
 
 print_string:
 .next:
