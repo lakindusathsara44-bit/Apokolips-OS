@@ -1,7 +1,7 @@
 # Apokolips OS — BIOS Bootloader Specification
 
-**Status:** Proposed specification — requires project-owner approval before implementation  
-**Document version:** 0.1  
+**Status:** Active implementation specification — BL-1, BL-2, and BL-3 hosted/QEMU milestones implemented; Oracle VirtualBox validation pending  
+**Document version:** 0.2  
 **Target architecture:** x86_64 / AMD64  
 **Initial firmware:** Legacy BIOS-compatible VirtualBox firmware  
 **Boot medium:** Disposable raw virtual-disk image  
@@ -360,17 +360,17 @@ A source file existing or compiling is not proof that the bootloader works.
 
 | Milestone | Deliverable | Completion evidence |
 |---|---|---|
-| BL-0 | Confirm toolchain and VM configuration | Versions and VM settings documented |
-| BL-1 | Stage 1 boot sector | 512-byte image, valid signature, static checks pass |
-| BL-2 | Stage 1 loads Stage 2 | VirtualBox reaches Stage 2 entry reliably |
-| BL-3 | Stage 2 diagnostics | Expected status message appears |
-| BL-4 | Manifest format and validation | Valid and invalid manifest tests pass |
-| BL-5 | Memory-map collection | E820 map captured and validated |
-| BL-6 | Kernel image loading | Own minimal kernel image loaded and validated |
-| BL-7 | Long-mode transition | CPU enters 64-bit mode and reports success |
-| BL-8 | Kernel hand-off | Minimal kernel validates boot information and runs |
+| BL-0 | Initial toolchain and image-build setup | Hosted NASM/Python versions and reproducible build steps recorded; local VM setup still pending |
+| BL-1 | Original Stage 1 and Stage 2 image | 512-byte Stage 1, valid signature, fixed Stage 2 region, image-layout tests pass |
+| BL-2 | Bounded E820 memory-map collection | Stage 2 validates E820 response signatures/lengths and bounds the record buffer |
+| BL-3 | BIOS runtime smoke test | QEMU/SeaBIOS boots the image and Stage 2 reports a non-zero E820 count; run #30 reported 7 |
+| BL-4 | Manifest format and validation | Valid and invalid manifest tests pass, including checksum and range checks |
+| BL-5 | E820 record validation and normalization | Malformed, overlapping, zero-length, and overflowing ranges are handled by documented rules |
+| BL-6 | Kernel image loading | Own minimal kernel image is loaded into a validated physical range |
+| BL-7 | Long-mode transition | CPU enters 64-bit mode and reports success under the target VM |
+| BL-8 | Kernel hand-off | Minimal kernel validates the versioned boot-information structure and runs |
 
-Milestones BL-4 onward are not prerequisites for proving the initial Stage 1-to-Stage 2 path. Do not combine them into one large, difficult-to-debug implementation.
+QEMU/SeaBIOS success does not complete the separate Oracle VirtualBox acceptance test. Keep each remaining milestone isolated and require both automated checks and the appropriate runtime evidence.
 
 ## 17. Open decisions before coding
 
@@ -385,18 +385,20 @@ The following must be settled and recorded:
 8. Exact boot-information structure and register ABI.
 9. Whether a CHS fallback is ever required.
 
-The first code milestone should not be blocked by decisions that are only needed for later stages. BL-1 and BL-2 can be developed with a small Stage 2 that only displays a status message.
+The initial Stage 1/Stage 2 path and bounded E820 collection have now been implemented and smoke-tested under QEMU/SeaBIOS. Remaining decisions about the manifest format, kernel ELF subset, and hand-off ABI should be resolved in the specific milestones that need them, rather than delaying the existing working boot path.
 
 ---
 
 ## 18. Current status
 
-- BIOS boot path: specified at an initial design level.
-- Disk layout: proposed for the first raw VirtualBox image.
-- Stage 1 responsibilities: specified.
-- Stage 2 first milestone: specified.
-- Manifest, ELF loading, E820, and long-mode transition: planned but detailed binary contracts remain open.
-- Bootloader source code: not yet implemented.
-- Toolchain and VirtualBox settings: not yet verified.
+- BIOS raw-image layout: implemented as a 34-sector build image with Stage 1 at LBA 0, the reserved Stage 2 region at LBA 1–32, a reserved manifest sector at LBA 33, and future payload space from LBA 34.
+- Stage 1: original 512-byte BIOS boot sector; hosted image checks and QEMU BIOS boot path pass.
+- Stage 2: original 16-bit real-mode E820 discovery; bounded to 32 records of 24 bytes at physical 0x5000.
+- Hosted verification: NASM assembly, image generation, and all 12 Python tests passed in GitHub Actions run #30.
+- QEMU/SeaBIOS runtime: Stage 2 reported 7 E820 entries in run #30.
+- Oracle VirtualBox runtime: pending.
+- Manifest validation, kernel image loading, A20/GDT/page-table setup, long-mode transition, and kernel hand-off: not implemented.
+- Kernel: not implemented.
+- NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run; local Windows/VirtualBox toolchain settings remain unverified.
 
-**Next step:** approve this specification, confirm the development toolchain and VM settings, then implement BL-1 only. The first code change should produce and statically validate the 512-byte Stage 1 boot sector; do not begin kernel code yet.
+**Next step:** specify and test the reserved boot-manifest sector. Preserve the fail-closed rule: no future kernel payload may be loaded unless its metadata, size, location, and integrity checks pass.

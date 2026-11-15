@@ -5,15 +5,23 @@ on:
     paths:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
+      - "tools/test_bios_boot.py"
       - "tests/test_bl1_image.py"
       - "tests/test_bl2_e820_source.py"
+      - "tests/test_bios_smoke.py"
+      - "docs/BL3_QEMU_BIOS_SMOKE_TEST.md"
+      - "bootloader/bios/README.md"
       - ".github/workflows/bl1-build.yml"
   pull_request:
     paths:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
+      - "tools/test_bios_boot.py"
       - "tests/test_bl1_image.py"
       - "tests/test_bl2_e820_source.py"
+      - "tests/test_bios_smoke.py"
+      - "docs/BL3_QEMU_BIOS_SMOKE_TEST.md"
+      - "bootloader/bios/README.md"
       - ".github/workflows/bl1-build.yml"
   workflow_dispatch:
 
@@ -26,27 +34,40 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-      - name: Install NASM
+      - name: Install NASM and QEMU
         run: |
           sudo apt-get update
-          sudo apt-get install --yes nasm
+          sudo apt-get install --yes nasm qemu-system-x86
       - name: Show tool versions
         run: |
           nasm -v
+          qemu-system-x86_64 --version
           python3 --version
-      - name: Assemble boot stages
+      - name: Assemble production boot stages
         run: |
           mkdir -p build
           nasm -f bin bootloader/bios/stage1/boot.asm -o build/stage1.bin
           nasm -f bin bootloader/bios/stage2/stage2.asm -o build/stage2.bin
-      - name: Build raw disk image
+      - name: Build production raw disk image
         run: python3 tools/build_bl1_image.py
       - name: Run static tests
         run: python3 -m unittest discover -s tests -v
-      - name: Upload BIOS bootloader image
+      - name: Assemble QEMU diagnostic Stage 2
+        run: |
+          nasm -D QEMU_DEBUGCON=1 -f bin bootloader/bios/stage2/stage2.asm -o build/stage2-qemu.bin
+      - name: Build QEMU BIOS smoke-test image
+        run: |
+          python3 tools/build_bl1_image.py \
+            --stage2 build/stage2-qemu.bin \
+            --output build/apokolips-bl2-qemu-smoke.img
+      - name: Boot image with QEMU BIOS and verify E820
+        run: python3 tools/test_bios_boot.py build/apokolips-bl2-qemu-smoke.img
+      - name: Upload BIOS bootloader images
         uses: actions/upload-artifact@v4
         with:
-          name: apokolips-os-bios-bootloader-image
-          path: build/apokolips-bl1.img
+          name: apokolips-os-bios-bootloader-images
+          path: |
+            build/apokolips-bl1.img
+            build/apokolips-bl2-qemu-smoke.img
           if-no-files-found: error
           retention-days: 14

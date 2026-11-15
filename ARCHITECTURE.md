@@ -471,26 +471,23 @@ No subsystem is complete merely because code has been written. Each milestone mu
 6. Known limitations and follow-up work.
 7. A reviewed Git commit.
 
-### First implementation gate
+### Current bootloader implementation gate
 
-Before writing the first bootloader code, the following must be confirmed:
-- BIOS boot image format and disk layout.
-- First-stage and second-stage responsibilities.
-- Assembler, cross-compiler, linker, and image-builder choices.
-- Kernel ELF format and linker layout.
-- Boot-information structure and entry ABI.
-- VirtualBox VM configuration and safe test procedure.
+The original BIOS Stage 1 and Stage 2 now assemble into a bounded raw image, and the hosted QEMU/SeaBIOS smoke test confirms that Stage 2 receives a non-zero E820 map. The next gate is not kernel coding: first specify and validate the reserved boot-manifest sector, its checksum and bounds, and how the loader fails on invalid metadata.
 
-The first implementation milestone should be deliberately small: produce a bootable image that reaches an original Apokolips OS boot stage and displays a clear status message. Do not start the scheduler, filesystem, or desktop before this gate passes.
+Oracle VirtualBox runtime verification remains outstanding. Kernel image loading, long-mode setup, and the kernel hand-off ABI must remain separate, testable milestones. Do not start the scheduler, filesystem, or desktop before a minimal kernel has been loaded and its hand-off validated.
 
 ---
 
 ## 15. Current status
 
-- Repository and initial roadmap exist.
-- This document establishes the proposed technical architecture.
-- No Apokolips OS bootloader or kernel implementation is claimed to exist yet.
-- Toolchain versions and VM configuration still need to be verified.
+- Original BIOS Stage 1 and Stage 2 source code is present in the repository.
+- The raw 34-sector image builds successfully; hosted image-layout and source tests pass.
+- GitHub Actions run #30 successfully booted a diagnostic image under QEMU/SeaBIOS; Stage 2 reported 7 E820 entries.
+- Oracle VirtualBox runtime testing is still pending.
+- No kernel has been implemented or loaded.
+- E820 map normalization, physical allocation, manifest validation, kernel loading, long-mode transition, and kernel hand-off remain future work.
+- NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run. The final local Windows/VirtualBox toolchain configuration is not yet verified.
 - Architecture choices marked provisional remain subject to project-owner approval.
 
-**Next engineering step:** review and approve the first boot target and toolchain, then write a precise BIOS bootloader specification before implementing assembly code.
+**Next engineering step:** specify and implement boot-manifest validation as an isolated bootloader milestone. Do not begin kernel loading until the manifest layout, checksum, bounds, and failure cases have independent tests.

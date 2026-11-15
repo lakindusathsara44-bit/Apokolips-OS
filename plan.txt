@@ -246,12 +246,24 @@ host laptop's real disks.
 
 CURRENT PROJECT STATUS
 ----------------------
-Project repository created.
-Development phase: Phase 0 - Project Foundation and Specification.
+Development phase: Phase 1 - Original BIOS bootloader (in progress).
+
+BL-1: Original Stage 1 and Stage 2 sources and the 34-sector image builder
+      exist. Hosted assembly, image-layout tests, and QEMU BIOS boot smoke
+      testing have passed.
+BL-2: Stage 2 collects a bounded BIOS E820 memory map. QEMU/SeaBIOS
+      reported 7 entries in the automated runtime smoke test.
+BL-3: Automated QEMU/SeaBIOS runtime smoke test is implemented. All 12
+      Python tests and all workflow steps passed in GitHub Actions run #30.
+
+Oracle VirtualBox BIOS runtime verification: Pending.
 Kernel implementation: Not started.
-Bootloader implementation: Not started.
-First target: approve the architecture and toolchain before writing the
-first bootloader code.
+Memory-map normalization and physical allocation: Not started.
+Kernel loading, long-mode transition, and kernel hand-off: Not started.
+
+Next bootloader milestone: define and validate the reserved boot-manifest
+sector before loading any future kernel payload. Keep that work isolated
+in its own branch and require build, test, and emulator evidence.
 
 IMPORTANT SCOPE NOTE
 -------------------
