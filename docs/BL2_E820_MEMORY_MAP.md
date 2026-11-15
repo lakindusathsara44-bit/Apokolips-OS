@@ -1,6 +1,6 @@
 # Apokolips OS — BL-2 BIOS Memory-Map Discovery
 
-**Status:** Implemented as source; hosted assembly/static tests pending; BIOS runtime verification pending  
+**Status:** Hosted assembly/static tests passed; QEMU/SeaBIOS runtime smoke test passed (7 entries); Oracle VirtualBox runtime verification pending  
 **Target:** x86 BIOS real mode, x86_64 system development  
 **Parent milestone:** BL-1 Stage 1 → Stage 2 hand-off
 
@@ -41,8 +41,9 @@ On success, Stage 2 prints the number of E820 records received as two hexadecima
 - The kernel is not loaded; there is no protected-mode or long-mode transition.
 - The BIOS-provided map remains untrusted input and must be validated again by the future kernel.
 - The 32-entry cap may reject machines whose firmware reports more entries.
-- Hosted CI can assemble the source and run source/layout tests, but cannot prove real BIOS E820 behaviour.
-- Runtime verification requires booting the image in a disposable BIOS VM and checking the displayed entry count.
+- GitHub Actions run #30 assembled the image, passed all 12 Python tests, and booted the diagnostic image under QEMU/SeaBIOS.
+- QEMU/SeaBIOS reported 7 E820 entries. This verifies the implemented path in that emulated BIOS environment only.
+- Oracle VirtualBox runtime testing remains pending and must be recorded separately.
 
 ## 6. Acceptance criteria
 
@@ -52,4 +53,4 @@ On success, Stage 2 prints the number of E820 records received as two hexadecima
 4. The implementation never writes beyond 32 x 24 bytes.
 5. A truncated map is rejected.
 6. Hosted static tests pass.
-7. BIOS runtime testing is separately recorded and not inferred from CI success.
+7. Hosted assembly/static tests and the QEMU/SeaBIOS smoke test pass; Oracle VirtualBox runtime testing remains a separate outstanding acceptance item.
