@@ -57,7 +57,9 @@ detect_memory_map:
     mov eax, 0xE820
     mov edx, SMAP_SIGNATURE
     mov ecx, E820_ENTRY_SIZE
+    push di
     int 0x15
+    pop di
     jc .failed
 
     cmp eax, SMAP_SIGNATURE
@@ -107,10 +109,9 @@ print_hex_byte:
     mov ah, al
     shr al, 4
     call print_hex_nibble
-    mov al, ah
+    pop ax
     and al, 0x0F
     call print_hex_nibble
-    pop ax
     ret
 
 print_hex_nibble:
