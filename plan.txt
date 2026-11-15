@@ -1,0 +1,261 @@
+APOKOLIPS OS
+Independent Operating System Development Plan
+==============================================
+
+Project name: Apokolips OS
+Repository: https://github.com/lakindusathsara44-bit/Apokolips-OS
+Development approach: Original implementation from scratch
+Kernel direction: Hybrid kernel
+Initial development environment: Oracle VirtualBox
+Initial target architecture: x86_64 (AMD64)
+
+PROJECT VISION
+--------------
+Build an independent operating system whose boot process, kernel, core
+subsystems, command environment, desktop, and native applications are
+designed and implemented specifically for Apokolips OS.
+
+"From scratch" means that Apokolips OS will not be a Linux distribution,
+a modified Windows installation, or a repackaged existing operating
+system. We will write and maintain our own OS source code.
+
+We may use documented hardware specifications, CPU manuals, programming
+language standards, assemblers, compilers, linkers, emulators, debuggers,
+and other development tools. These tools are not an OS codebase. Any
+third-party component or code considered in the future must be reviewed,
+licensed correctly, documented, and explicitly approved before use.
+
+CORE DEVELOPMENT PRINCIPLES
+---------------------------
+1. Originality: implement Apokolips OS components as our own code.
+2. No borrowed kernel: do not use the Linux, Windows, BSD, or another
+   operating-system kernel as the foundation.
+3. No unapproved code copying: do not copy source files from other OS
+   projects or tutorials into the project.
+4. Understandable engineering: document what each subsystem does and why.
+5. Incremental development: implement, build, run, and test one milestone
+   at a time.
+6. Reliability: do not mark a milestone complete until its tests pass.
+7. Hardware awareness: use CPU and device documentation as technical
+   references; do not assume all hardware behaves identically.
+8. Traceable changes: keep source code, design decisions, tests, and
+   milestones in Git history.
+9. Safe experimentation: first run in a virtual machine, not on the
+   laptop's main installation or disk.
+10. User-directed design: major product and interface decisions are made
+    with the project owner.
+
+INITIAL TECHNICAL TARGET
+------------------------
+Architecture: x86_64 / AMD64
+Virtual machine: Oracle VirtualBox
+Initial boot target: VirtualBox BIOS-compatible boot
+Language plan:
+  - Assembly for the earliest CPU and boot operations where required.
+  - C for initial low-level kernel development.
+  - C++ or another language only when the architecture and toolchain
+    justify it.
+Build tools: an assembler, cross-compiler, linker, image builder, and
+debugging tools selected and documented during Phase 0.
+
+The initial BIOS boot path is a development target, not a permanent
+hardware limitation. UEFI support can be designed and implemented later.
+
+SYSTEM ARCHITECTURE
+-------------------
+The intended design is a hybrid kernel. The exact boundaries between
+kernel-space and user-space services will be specified before they are
+implemented.
+
+Planned original subsystems:
+  - Bootloader and boot protocol
+  - Kernel entry and CPU initialization
+  - Global Descriptor Table and Interrupt Descriptor Table
+  - Interrupt and exception handling
+  - Physical and virtual memory management
+  - Kernel heap allocation
+  - Scheduler and thread/process management
+  - Inter-process communication
+  - System call interface
+  - Hardware abstraction and device drivers
+  - Timer and clock services
+  - Storage and block-device layer
+  - Apokolips-native filesystem
+  - Executable loading and program runtime
+  - Security and permission model
+  - Native command shell
+  - Graphics, windowing, and input system
+  - Desktop environment
+  - Native application framework
+
+DEVELOPMENT ROADMAP
+-------------------
+
+PHASE 0 - PROJECT FOUNDATION AND SPECIFICATION
+  0.1 Confirm project goals and non-goals.
+  0.2 Write the technical architecture document.
+  0.3 Define the initial x86_64 boot and execution environment.
+  0.4 Select and document the assembler, compiler, linker, and emulator
+      versions.
+  0.5 Define source layout, naming rules, build conventions, and tests.
+  0.6 Record major architecture decisions in docs/decision-records/.
+  Exit condition: the first implementation milestone is fully specified.
+
+PHASE 1 - ORIGINAL BOOTLOADER
+  1.1 Study the required x86 boot process and firmware interfaces.
+  1.2 Design the Apokolips OS boot stages and boot information structure.
+  1.3 Write the first boot stage in assembly.
+  1.4 Load the next stage and validate the hand-off.
+  1.5 Establish the required CPU mode and enter the kernel.
+  1.6 Display a simple boot status using an available text or framebuffer
+      output method.
+  Exit condition: the original bootloader reliably transfers control to
+  a minimal Apokolips kernel in VirtualBox.
+
+PHASE 2 - MINIMAL KERNEL
+  2.1 Create the kernel entry point and linker layout.
+  2.2 Initialize essential CPU tables and exception handling.
+  2.3 Add basic diagnostic output.
+  2.4 Add a controlled kernel panic and diagnostic report.
+  2.5 Establish a repeatable build and boot test.
+  Exit condition: the kernel starts, reports its status, handles expected
+  exceptions safely, and can be rebuilt reproducibly.
+
+PHASE 3 - MEMORY MANAGEMENT
+  3.1 Read and validate the memory map supplied by the boot stage.
+  3.2 Implement physical page-frame allocation.
+  3.3 Implement virtual memory and page-table management.
+  3.4 Implement kernel heap allocation.
+  3.5 Add memory tests and allocation diagnostics.
+  Exit condition: memory allocation and address-space tests pass.
+
+PHASE 4 - INTERRUPTS, TIMING, AND CONCURRENCY
+  4.1 Implement interrupt and exception dispatch.
+  4.2 Initialize a programmable timer source.
+  4.3 Design kernel threads and context switching.
+  4.4 Implement the first scheduler.
+  4.5 Add synchronization primitives.
+  Exit condition: multiple kernel tasks run predictably under timer control.
+
+PHASE 5 - PROCESSES AND SYSTEM INTERFACES
+  5.1 Define process and thread structures.
+  5.2 Design user/kernel privilege boundaries.
+  5.3 Implement system-call entry and validation.
+  5.4 Implement inter-process communication.
+  5.5 Load and run a first isolated user program.
+  Exit condition: a user program runs without directly controlling the
+  kernel and can use documented system services.
+
+PHASE 6 - HARDWARE AND DEVICE SUPPORT
+  6.1 Define the Apokolips hardware abstraction layer.
+  6.2 Implement basic console and keyboard input.
+  6.3 Implement timer and display support.
+  6.4 Add storage-controller discovery and a block-device interface.
+  6.5 Add driver isolation and error handling where practical.
+  Exit condition: required virtual hardware can be discovered and used
+  through documented driver interfaces.
+
+PHASE 7 - NATIVE FILESYSTEM AND STORAGE
+  7.1 Specify the Apokolips filesystem format.
+  7.2 Implement volume and block management.
+  7.3 Implement files, directories, metadata, and permissions.
+  7.4 Add consistency checks and corruption handling.
+  7.5 Build filesystem test and recovery utilities.
+  Exit condition: files can be created, read, updated, and safely tested
+  on a virtual disk image.
+
+PHASE 8 - SHELL AND NATIVE PROGRAMS
+  8.1 Design the Apokolips command language and command conventions.
+  8.2 Implement the native shell.
+  8.3 Implement program loading and runtime support.
+  8.4 Create initial native utilities.
+  Exit condition: users can operate the system and launch native programs
+  from the shell.
+
+PHASE 9 - GRAPHICS AND DESKTOP
+  9.1 Define the graphics and display architecture.
+  9.2 Implement framebuffer graphics and drawing primitives.
+  9.3 Implement input event handling.
+  9.4 Design the windowing and desktop model.
+  9.5 Build the original Apokolips desktop interface.
+  Exit condition: a user can interact with the desktop and launch programs.
+
+PHASE 10 - SECURITY, STABILITY, AND PERFORMANCE
+  10.1 Review privilege boundaries and permissions.
+  10.2 Add process and resource isolation checks.
+  10.3 Add systematic tests and failure recovery.
+  10.4 Profile memory, scheduling, storage, and graphics.
+  10.5 Fix defects and document known limitations.
+  Exit condition: defined stability and security tests pass.
+
+PHASE 11 - INSTALLATION, HARDWARE TESTING, AND RELEASE
+  11.1 Design a safe virtual-disk installation process.
+  11.2 Create reproducible bootable images.
+  11.3 Test snapshots, upgrades, and recovery.
+  11.4 Add UEFI support if approved and technically ready.
+  11.5 Test on selected physical hardware only after virtual testing.
+  11.6 Publish a versioned development release with known limitations.
+  Exit condition: a documented, reproducible release can be installed
+  and tested safely.
+
+REPOSITORY ORGANIZATION
+-----------------------
+The repository will grow as each subsystem is designed. The planned
+top-level organization is:
+
+  bootloader/       Original boot stages and boot protocol
+  kernel/           Kernel entry, core, and architecture code
+  drivers/          Device drivers
+  memory/           Physical and virtual memory management
+  processes/        Threads, processes, scheduler, and IPC
+  filesystem/       Native filesystem and storage interfaces
+  security/         Permissions and security mechanisms
+  shell/            Native command shell
+  desktop/          Graphics, windowing, and desktop environment
+  applications/     Native system applications
+  libraries/        Apokolips system libraries
+  tools/            Build and development tools written for the project
+  tests/            Automated and manual tests
+  docs/             Architecture, specifications, and decision records
+
+Directories will be added when their first implementation is ready;
+empty folders are not milestones.
+
+GIT AND CHANGE MANAGEMENT
+-------------------------
+- Keep the default branch buildable whenever practical.
+- Use focused branches for substantial features.
+- Use descriptive commits that explain the change.
+- Review changes and test results before merging.
+- Do not claim a feature is complete based only on source code existing.
+- Record build instructions, test steps, and known limitations.
+- Tag meaningful milestones and releases.
+
+TESTING POLICY
+--------------
+Every subsystem must have:
+  - A written purpose and interface.
+  - Build instructions.
+  - At least one relevant test or verification procedure.
+  - Expected results.
+  - Recorded known limitations.
+
+Initial testing will use VirtualBox snapshots and virtual disks. No
+experimental installer or disk-writing code should be run against the
+host laptop's real disks.
+
+CURRENT PROJECT STATUS
+----------------------
+Project repository created.
+Development phase: Phase 0 - Project Foundation and Specification.
+Kernel implementation: Not started.
+Bootloader implementation: Not started.
+First target: approve the architecture and toolchain before writing the
+first bootloader code.
+
+IMPORTANT SCOPE NOTE
+-------------------
+A fully independent operating system is a long-term engineering project.
+This plan is a staged target, not a claim that all listed capabilities
+already exist. The roadmap may be revised when tests, hardware constraints,
+or approved design decisions require it.
