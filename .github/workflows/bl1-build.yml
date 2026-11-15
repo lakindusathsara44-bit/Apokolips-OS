@@ -1,4 +1,4 @@
-name: Apokolips OS BL-1 Build
+name: Apokolips OS BIOS Bootloader Build
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
       - "tests/test_bl1_image.py"
+      - "tests/test_bl2_e820_source.py"
       - ".github/workflows/bl1-build.yml"
   pull_request:
     paths:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
       - "tests/test_bl1_image.py"
+      - "tests/test_bl2_e820_source.py"
       - ".github/workflows/bl1-build.yml"
   workflow_dispatch:
 
@@ -41,10 +43,10 @@ jobs:
         run: python3 tools/build_bl1_image.py
       - name: Run static tests
         run: python3 -m unittest discover -s tests -v
-      - name: Upload BL-1 image
+      - name: Upload BIOS bootloader image
         uses: actions/upload-artifact@v4
         with:
-          name: apokolips-os-bl1-raw-image
+          name: apokolips-os-bios-bootloader-image
           path: build/apokolips-bl1.img
           if-no-files-found: error
           retention-days: 14
