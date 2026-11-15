@@ -28,6 +28,14 @@ class BL2E820SourceTests(unittest.TestCase):
         self.assertIn("cmp ecx, 20", self.source)
         self.assertIn("stc", self.source)
 
+    def test_preserves_segment_registers_and_destination_pointer(self):
+        self.assertIn("push ds", self.source)
+        self.assertIn("push es", self.source)
+        self.assertIn("push di", self.source)
+        self.assertIn("pop di", self.source)
+        self.assertIn("pop es", self.source)
+        self.assertIn("pop ds", self.source)
+
     def test_reports_entry_count_and_does_not_claim_kernel_boot(self):
         self.assertIn("BL-2: E820 MEMORY MAP ENTRIES", self.source)
         self.assertIn("BL-2 ERROR: E820 MEMORY MAP UNAVAILABLE/INVALID", self.source)
