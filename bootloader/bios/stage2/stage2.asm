@@ -1,6 +1,9 @@
 ; Apokolips OS — BL-2 Stage 2
 ; BIOS E820 memory-map discovery in 16-bit real mode.
 ; This remains a bootloader diagnostic stage, not a kernel.
+;
+; QEMU_DEBUGCON is defined only for the CI smoke-test image. The normal
+; boot image continues to use BIOS text output without port-0xE9 writes.
 
 BITS 16
 ORG 0x8000
@@ -102,6 +105,9 @@ print_string:
     lodsb
     test al, al
     jz .done
+%ifdef QEMU_DEBUGCON
+    out 0xE9, al
+%endif
     mov ah, 0x0E
     mov bx, 0x0007
     push si
@@ -131,6 +137,9 @@ print_hex_nibble:
 .digit:
     add al, '0'
 .emit:
+%ifdef QEMU_DEBUGCON
+    out 0xE9, al
+%endif
     mov ah, 0x0E
     mov bx, 0x0007
     int 0x10
