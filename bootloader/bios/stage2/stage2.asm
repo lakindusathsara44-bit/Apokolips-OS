@@ -57,9 +57,15 @@ detect_memory_map:
     mov eax, 0xE820
     mov edx, SMAP_SIGNATURE
     mov ecx, E820_ENTRY_SIZE
+    ; Preserve segment registers and the destination pointer across BIOS.
+    ; EBX is intentionally not restored: BIOS returns the continuation token.
+    push ds
+    push es
     push di
     int 0x15
     pop di
+    pop es
+    pop ds
     jc .failed
 
     cmp eax, SMAP_SIGNATURE
@@ -92,13 +98,15 @@ memory_map_error:
     jmp .halt
 
 print_string:
-    mov ah, 0x0E
-    mov bx, 0x0007
 .next:
     lodsb
     test al, al
     jz .done
+    mov ah, 0x0E
+    mov bx, 0x0007
+    push si
     int 0x10
+    pop si
     jmp .next
 .done:
     ret
