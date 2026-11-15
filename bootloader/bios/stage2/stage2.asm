@@ -95,7 +95,12 @@ detect_memory_map:
 memory_map_error:
     mov si, map_error
     call print_string
-    jmp .halt
+    jmp stage2_halt
+
+stage2_halt:
+    cli
+    hlt
+    jmp stage2_halt
 
 print_string:
 .next:
