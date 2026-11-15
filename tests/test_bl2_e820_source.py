@@ -41,6 +41,11 @@ class BL2E820SourceTests(unittest.TestCase):
         self.assertIn("BL-2 ERROR: E820 MEMORY MAP UNAVAILABLE/INVALID", self.source)
         self.assertIn("not a kernel", self.source.lower())
 
+    def test_qemu_debug_output_is_opt_in_and_covers_text_and_hex(self):
+        self.assertEqual(self.source.count("out 0xE9, al"), 2)
+        self.assertEqual(self.source.count("%ifdef QEMU_DEBUGCON"), 2)
+        self.assertEqual(self.source.count("%endif"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
