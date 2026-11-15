@@ -1,0 +1,50 @@
+name: Apokolips OS BL-1 Build
+
+on:
+  push:
+    paths:
+      - "bootloader/bios/**"
+      - "tools/build_bl1_image.py"
+      - "tests/test_bl1_image.py"
+      - ".github/workflows/bl1-build.yml"
+  pull_request:
+    paths:
+      - "bootloader/bios/**"
+      - "tools/build_bl1_image.py"
+      - "tests/test_bl1_image.py"
+      - ".github/workflows/bl1-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install NASM
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes nasm
+      - name: Show tool versions
+        run: |
+          nasm -v
+          python3 --version
+      - name: Assemble boot stages
+        run: |
+          mkdir -p build
+          nasm -f bin bootloader/bios/stage1/boot.asm -o build/stage1.bin
+          nasm -f bin bootloader/bios/stage2/stage2.asm -o build/stage2.bin
+      - name: Build raw disk image
+        run: python3 tools/build_bl1_image.py
+      - name: Run static tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Upload BL-1 image
+        uses: actions/upload-artifact@v4
+        with:
+          name: apokolips-os-bl1-raw-image
+          path: build/apokolips-bl1.img
+          if-no-files-found: error
+          retention-days: 14
