@@ -1,14 +1,22 @@
 # Apokolips OS — BIOS Bootloader
 
-## BL-1
+## BL-1 — Original BIOS boot stages
 
-BL-1 provides an original 512-byte BIOS Stage 1 that loads the fixed 16 KiB Stage 2 region using EDD INT 13h extensions.
+BL-1 provides an original 512-byte BIOS Stage 1 that loads the fixed 16 KiB Stage 2 region using EDD INT 13h extensions. The raw image builder validates the boot-sector size/signature and keeps Stage 2 inside its reserved region.
 
 ## BL-2 — E820 memory-map discovery
 
 BL-2 extends Stage 2 to query the BIOS E820 memory map in 16-bit real mode. It requests 24-byte records, stores at most 32 entries at physical address 0x5000, validates the SMAP signature and minimum returned size, and rejects failed or truncated responses. On success it displays the number of entries.
 
 The memory map is not yet normalized or used by a physical memory allocator. BL-2 does not load a kernel or enter protected/long mode.
+
+## BL-3 — QEMU BIOS runtime smoke test
+
+GitHub Actions builds a separate diagnostic image and boots it under QEMU/SeaBIOS. The test checks that Stage 2 runs and receives a non-zero E820 entry count. The passing run reported 7 entries.
+
+QEMU debug-console output is opt-in and compiled only into the smoke-test Stage 2. The normal image continues to use BIOS text output without port-0xE9 diagnostic writes. This QEMU test does not replace the planned Oracle VirtualBox runtime test.
+
+Evidence: [GitHub Actions run #30](https://github.com/lakindusathsara44-bit/Apokolips-OS/actions/runs/43705317384).
 
 ## Raw image layout
 
@@ -21,7 +29,7 @@ The memory map is not yet normalized or used by a physical memory allocator. BL-
 
 ## Build
 
-Requirements: NASM and Python 3 standard library.
+Requirements: NASM, Python 3 standard library, and QEMU (qemu-system-x86) for the BIOS smoke test.
 
     mkdir -p build
     nasm -f bin bootloader/bios/stage1/boot.asm -o build/stage1.bin
@@ -29,4 +37,6 @@ Requirements: NASM and Python 3 standard library.
     python3 tools/build_bl1_image.py
     python3 -m unittest discover -s tests -v
 
-The raw image builder enforces the 512-byte Stage 1 signature and 16 KiB Stage 2 limit. Hosted builds do not prove VirtualBox runtime boot.
+For the hosted runtime test, assemble Stage 2 with the QEMU diagnostic define, build a separate image, and run tools/test_bios_boot.py. The GitHub Actions workflow performs these steps automatically.
+
+The raw image builder enforces the 512-byte Stage 1 signature and 16 KiB Stage 2 limit. Neither CI nor QEMU smoke testing proves VirtualBox or physical-hardware compatibility.
