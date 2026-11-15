@@ -19,7 +19,7 @@ class BL2E820SourceTests(unittest.TestCase):
     def test_memory_map_buffer_is_bounded(self):
         self.assertIn("%define E820_BUFFER       0x5000", self.source)
         self.assertIn("%define E820_MAX_ENTRIES  32", self.source)
-        self.assertRegex(self.source, r"(?m)^%define\\s+E820_ENTRY_SIZE\\s+24$")
+        self.assertRegex(self.source, r"(?m)^%define\s+E820_ENTRY_SIZE\s+24$")
         self.assertIn("cmp word [entry_count], E820_MAX_ENTRIES", self.source)
 
     def test_rejects_failed_or_malformed_e820_responses(self):
