@@ -266,8 +266,15 @@ BL-4: Version-1 boot-manifest generation and Stage 2 validation are implemented
       negative QEMU/SeaBIOS runtime verification passed in GitHub Actions
       (21 Python tests passed; 7 E820 entries reported).
 
-Next: complete Oracle VirtualBox BIOS runtime validation. Then implement
-BL-5 E820 record validation and normalization before any physical allocator.
+BL-5 preparation: a host-side E820 record parser/normalizer reference model,
+its 14 focused unit tests, and the normalization specification are present on
+development/bl-5-e820-normalization (draft PR #6). GitHub Actions run #62
+passed the complete bootloader build, test, and QEMU/SeaBIOS smoke-test workflow.
+This validates the host reference model and existing boot path only; BIOS Stage 2
+assembly normalization and Oracle VirtualBox runtime verification remain pending.
+
+Next: translate the BL-5 normalization policy into bounded BIOS Stage 2 assembly,
+add positive/negative QEMU tests, then complete the separate VirtualBox BIOS test.
 
 IMPORTANT SCOPE NOTE
 -------------------
