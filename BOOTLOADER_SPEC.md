@@ -84,7 +84,7 @@ The image builder is a host-side development tool, not part of the bootloader. I
 7. Verify the boot signature, manifest fields, reserved bytes, checksum, and expected image offsets.
 8. Produce a report containing component sizes, LBAs, checksums, and image size.
 
-The first status-message milestone may use a fixed test image with the manifest and kernel area left unused. The image builder must still enforce the Stage 1 and Stage 2 layout.
+The current BL-4 image includes a validated manifest and leaves the future kernel payload area empty.
 
 ## 5. Stage 1 — BIOS boot sector
 
@@ -155,7 +155,6 @@ Stage 2 still does not load a kernel. A valid manifest and E820 report prove onl
 ### 6.2 Later responsibilities
 
 After the Stage 1-to-Stage 2 transfer is reliable, Stage 2 may be extended to:
-- Read and validate the boot manifest.
 - Load the kernel payload in bounded disk-read chunks.
 - Validate the kernel image format and architecture.
 - Collect the BIOS memory map using E820 where supported.
@@ -366,20 +365,18 @@ A source file existing or compiling is not proof that the bootloader works.
 
 QEMU/SeaBIOS success does not complete the separate Oracle VirtualBox acceptance test. Keep each remaining milestone isolated and require both automated checks and the appropriate runtime evidence.
 
-## 17. Open decisions before coding
+## 17. Open decisions before kernel loading
 
-The following must be settled and recorded:
-1. Exact assembler and version.
-2. Exact x86_64 cross-compiler and linker versions for the later kernel stage.
-3. Build scripting approach available on the Windows 11 host.
-4. VirtualBox version and exact BIOS VM configuration.
-5. Whether the initial Stage 2 size cap remains 16 KiB or is revised after a prototype.
-6. Exact boot-manifest binary layout and checksum.
-7. Exact kernel ELF subset and physical load window.
-8. Exact boot-information structure and register ABI.
-9. Whether a CHS fallback is ever required.
+The following decisions remain open and must be settled before their implementation milestones:
+1. Exact x86_64 cross-compiler and linker versions for the kernel stage.
+2. Build scripting approach available on the Windows 11 host.
+3. VirtualBox version and exact BIOS VM configuration.
+4. Whether the initial Stage 2 size cap remains 16 KiB or is revised after measured needs.
+5. Exact kernel ELF subset and validated physical load window.
+6. Exact boot-information structure and register ABI.
+7. Whether a CHS fallback is required by the supported hardware target.
 
-The initial Stage 1/Stage 2 path and bounded E820 collection have now been implemented and smoke-tested under QEMU/SeaBIOS. Remaining decisions about the manifest format, kernel ELF subset, and hand-off ABI should be resolved in the specific milestones that need them, rather than delaying the existing working boot path.
+The version-1 boot-manifest layout and CRC32 algorithm are now frozen in docs/BL4_BOOT_MANIFEST.md for BL-4. Any incompatible future change requires a new manifest version.
 
 ---
 
@@ -391,8 +388,9 @@ The initial Stage 1/Stage 2 path and bounded E820 collection have now been imple
 - Hosted verification: NASM assembly, image generation, and all 12 Python tests passed in GitHub Actions run #30.
 - QEMU/SeaBIOS runtime: Stage 2 reported 7 E820 entries in run #30.
 - Oracle VirtualBox runtime: pending.
-- Manifest validation, kernel image loading, A20/GDT/page-table setup, long-mode transition, and kernel hand-off: not implemented.
+- BL-4: version-1 manifest generation and host validation are implemented; Stage 2 performs BIOS read, field/range/reserved-byte checks, and CRC32 validation before E820. CI verification is pending.
+- Kernel image loading, A20/GDT/page-table setup, long-mode transition, and kernel hand-off: not implemented.
 - Kernel: not implemented.
 - NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run; local Windows/VirtualBox toolchain settings remain unverified.
 
-**Next step:** specify and test the reserved boot-manifest sector. Preserve the fail-closed rule: no future kernel payload may be loaded unless its metadata, size, location, and integrity checks pass.
+**Next step:** pass BL-4 positive/negative QEMU CI tests and complete the separate VirtualBox BIOS runtime check. Then proceed to BL-5 E820 record validation and normalization. Preserve the fail-closed rule: no future kernel payload may be loaded unless its metadata, size, location, and integrity checks pass.
