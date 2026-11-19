@@ -491,4 +491,4 @@ Oracle VirtualBox runtime verification remains outstanding. Kernel image loading
 - NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run. The final local Windows/VirtualBox toolchain configuration is not yet verified.
 - Architecture choices marked provisional remain subject to project-owner approval.
 
-**Next engineering step:** specify and implement boot-manifest validation as an isolated bootloader milestone. Do not begin kernel loading until the manifest layout, checksum, bounds, and failure cases have independent tests.
+**Next engineering step:** complete BL-4 positive/negative QEMU CI and separate Oracle VirtualBox validation. Then implement BL-5 E820 record normalization. Do not begin kernel loading until the boot metadata and memory map are independently validated.
