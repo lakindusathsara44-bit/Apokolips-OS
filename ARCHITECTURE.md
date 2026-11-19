@@ -473,7 +473,7 @@ No subsystem is complete merely because code has been written. Each milestone mu
 
 ### Current bootloader implementation gate
 
-The original BIOS Stage 1 and Stage 2 assemble into a bounded raw image. BL-4 adds a versioned manifest, host-side CRC32 validation, and Stage 2 checks before E820 discovery. The current development branch must pass positive and negative QEMU checks before BL-4 is complete. Oracle VirtualBox runtime verification remains a separate acceptance gate.
+The original BIOS Stage 1 and Stage 2 assemble into a bounded raw image. BL-4 adds a versioned manifest, host-side CRC32 validation, and Stage 2 checks before E820 discovery. The BL-4 host test suite and positive/negative QEMU/SeaBIOS runtime checks passed in GitHub Actions. Oracle VirtualBox runtime verification remains a separate acceptance gate; do not claim VirtualBox compatibility until that test is recorded.
 
 Oracle VirtualBox runtime verification remains outstanding. Kernel image loading, long-mode setup, and the kernel hand-off ABI must remain separate, testable milestones. Do not start the scheduler, filesystem, or desktop before a minimal kernel has been loaded and its hand-off validated.
 
@@ -486,9 +486,9 @@ Oracle VirtualBox runtime verification remains outstanding. Kernel image loading
 - GitHub Actions run #30 successfully booted a diagnostic image under QEMU/SeaBIOS; Stage 2 reported 7 E820 entries.
 - Oracle VirtualBox runtime testing is still pending.
 - No kernel has been implemented or loaded.
-- BL-4 manifest validation is implemented on the current development branch; CI verification is pending.
+- BL-4 manifest validation is implemented; all 21 Python tests and positive/negative QEMU/SeaBIOS checks passed in GitHub Actions.
 - E820 map normalization, physical allocation, kernel loading, long-mode transition, and kernel hand-off remain future work.
 - NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run. The final local Windows/VirtualBox toolchain configuration is not yet verified.
 - Architecture choices marked provisional remain subject to project-owner approval.
 
-**Next engineering step:** complete BL-4 positive/negative QEMU CI and separate Oracle VirtualBox validation. Then implement BL-5 E820 record normalization. Do not begin kernel loading until the boot metadata and memory map are independently validated.
+**Next engineering step:** complete separate Oracle VirtualBox BIOS runtime validation. Then implement BL-5 E820 record normalization. Do not begin kernel loading until the boot metadata and memory map are independently validated.
