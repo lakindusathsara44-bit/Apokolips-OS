@@ -263,9 +263,10 @@ Kernel loading, long-mode transition, and kernel hand-off: Not started.
 
 BL-4: Version-1 boot-manifest generation and Stage 2 validation are implemented
       on development/bl-4-manifest-validation. Host tests and QEMU positive/
-      negative runtime verification are pending CI execution.
+      negative QEMU/SeaBIOS runtime verification passed in GitHub Actions
+      (21 Python tests passed; 7 E820 entries reported).
 
-Next: complete BL-4 CI and Oracle VirtualBox BIOS validation. Then implement
+Next: complete Oracle VirtualBox BIOS runtime validation. Then implement
 BL-5 E820 record validation and normalization before any physical allocator.
 
 IMPORTANT SCOPE NOTE
