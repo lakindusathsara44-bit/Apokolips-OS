@@ -5,9 +5,9 @@
 BITS 16
 ORG 0x8000
 
-%define E820_BUFFER          0x5000
-%define E820_MAX_ENTRIES     32
-%define E820_ENTRY_SIZE      24
+%define E820_BUFFER       0x5000
+%define E820_MAX_ENTRIES  32
+%define E820_ENTRY_SIZE   24
 %define SMAP_SIGNATURE       0x534D4150
 
 %define MANIFEST_BUFFER      0x6000
