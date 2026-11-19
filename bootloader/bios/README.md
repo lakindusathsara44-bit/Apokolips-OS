@@ -12,11 +12,19 @@ The memory map is not yet normalized or used by a physical memory allocator. BL-
 
 ## BL-3 — QEMU BIOS runtime smoke test
 
-GitHub Actions builds a separate diagnostic image and boots it under QEMU/SeaBIOS. The test checks that Stage 2 runs and receives a non-zero E820 entry count. The passing run reported 7 entries.
+GitHub Actions builds a separate diagnostic image and boots it under QEMU/SeaBIOS. The test checks that Stage 2 runs and receives a non-zero E820 entry count. The passing baseline reported 7 entries.
 
-QEMU debug-console output is opt-in and compiled only into the smoke-test Stage 2. The normal image continues to use BIOS text output without port-0xE9 diagnostic writes. This QEMU test does not replace the planned Oracle VirtualBox runtime test.
+QEMU debug-console output is opt-in and compiled only into the smoke-test Stage 2. The normal image continues to use BIOS text output without port-0xE9 diagnostic writes. QEMU testing does not replace Oracle VirtualBox runtime validation.
 
-Evidence: [GitHub Actions run #30](https://github.com/lakindusathsara44-bit/Apokolips-OS/actions/runs/43705317384).
+## BL-4 — Versioned boot manifest
+
+Stage 2 reads the reserved manifest sector at LBA 33 into physical address 0x6000. It validates the APOKMAN1 magic, version 1, fixed header size, Stage 2 layout, flags, payload range arithmetic, reserved bytes, and CRC32 checksum before continuing to E820 discovery.
+
+The image builder creates the manifest deterministically. The hosted tests validate the generated structure and reject malformed metadata. The QEMU smoke test now checks both:
+- A valid manifest is accepted and the E820 path runs.
+- A corrupted manifest is rejected before the E820 path runs.
+
+The manifest currently describes an empty payload. BL-4 does not load a kernel, verify a payload checksum, enter protected/long mode, or transfer control to a kernel.
 
 ## Raw image layout
 
@@ -24,12 +32,12 @@ Evidence: [GitHub Actions run #30](https://github.com/lakindusathsara44-bit/Apok
 |---:|---|---:|
 | 0 | Stage 1 | 512 bytes |
 | 1–32 | Stage 2 reserved region | 16 KiB |
-| 33 | Reserved manifest sector | 512 bytes |
+| 33 | Versioned boot manifest | 512 bytes |
 | 34+ | Future kernel payload | Not included |
 
 ## Build
 
-Requirements: NASM, Python 3 standard library, and QEMU (qemu-system-x86) for the BIOS smoke test.
+Requirements: NASM, Python 3 standard library, and QEMU (qemu-system-x86) for the BIOS runtime smoke test.
 
     mkdir -p build
     nasm -f bin bootloader/bios/stage1/boot.asm -o build/stage1.bin
@@ -37,6 +45,6 @@ Requirements: NASM, Python 3 standard library, and QEMU (qemu-system-x86) for th
     python3 tools/build_bl1_image.py
     python3 -m unittest discover -s tests -v
 
-For the hosted runtime test, assemble Stage 2 with the QEMU diagnostic define, build a separate image, and run tools/test_bios_boot.py. The GitHub Actions workflow performs these steps automatically.
+For the hosted runtime test, assemble Stage 2 with the QEMU diagnostic define, build a separate smoke-test image, and run tools/test_bios_boot.py. GitHub Actions performs these steps automatically.
 
-The raw image builder enforces the 512-byte Stage 1 signature and 16 KiB Stage 2 limit. Neither CI nor QEMU smoke testing proves VirtualBox or physical-hardware compatibility.
+The raw image builder enforces the 512-byte Stage 1 signature and 16 KiB Stage 2 limit. Neither CI nor QEMU testing proves compatibility with every BIOS, VirtualBox configuration, or physical computer.

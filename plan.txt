@@ -261,9 +261,13 @@ Kernel implementation: Not started.
 Memory-map normalization and physical allocation: Not started.
 Kernel loading, long-mode transition, and kernel hand-off: Not started.
 
-Next bootloader milestone: define and validate the reserved boot-manifest
-sector before loading any future kernel payload. Keep that work isolated
-in its own branch and require build, test, and emulator evidence.
+BL-4: Version-1 boot-manifest generation and Stage 2 validation are implemented
+      on development/bl-4-manifest-validation. Host tests and QEMU positive/
+      negative QEMU/SeaBIOS runtime verification passed in GitHub Actions
+      (21 Python tests passed; 7 E820 entries reported).
+
+Next: complete Oracle VirtualBox BIOS runtime validation. Then implement
+BL-5 E820 record validation and normalization before any physical allocator.
 
 IMPORTANT SCOPE NOTE
 -------------------

@@ -6,22 +6,22 @@ on:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
       - "tools/test_bios_boot.py"
-      - "tests/test_bl1_image.py"
-      - "tests/test_bl2_e820_source.py"
-      - "tests/test_bios_smoke.py"
-      - "docs/BL3_QEMU_BIOS_SMOKE_TEST.md"
-      - "bootloader/bios/README.md"
+      - "tests/**"
+      - "docs/**"
+      - "BOOTLOADER_SPEC.md"
+      - "ARCHITECTURE.md"
+      - "plan.txt"
       - ".github/workflows/bl1-build.yml"
   pull_request:
     paths:
       - "bootloader/bios/**"
       - "tools/build_bl1_image.py"
       - "tools/test_bios_boot.py"
-      - "tests/test_bl1_image.py"
-      - "tests/test_bl2_e820_source.py"
-      - "tests/test_bios_smoke.py"
-      - "docs/BL3_QEMU_BIOS_SMOKE_TEST.md"
-      - "bootloader/bios/README.md"
+      - "tests/**"
+      - "docs/**"
+      - "BOOTLOADER_SPEC.md"
+      - "ARCHITECTURE.md"
+      - "plan.txt"
       - ".github/workflows/bl1-build.yml"
   workflow_dispatch:
 
@@ -50,7 +50,7 @@ jobs:
           nasm -f bin bootloader/bios/stage2/stage2.asm -o build/stage2.bin
       - name: Build production raw disk image
         run: python3 tools/build_bl1_image.py
-      - name: Run static tests
+      - name: Run static and manifest tests
         run: python3 -m unittest discover -s tests -v
       - name: Assemble QEMU diagnostic Stage 2
         run: |
@@ -59,15 +59,15 @@ jobs:
         run: |
           python3 tools/build_bl1_image.py \
             --stage2 build/stage2-qemu.bin \
-            --output build/apokolips-bl2-qemu-smoke.img
-      - name: Boot image with QEMU BIOS and verify E820
-        run: python3 tools/test_bios_boot.py build/apokolips-bl2-qemu-smoke.img
+            --output build/apokolips-bl4-qemu-smoke.img
+      - name: Boot valid and corrupted manifests with QEMU BIOS
+        run: python3 tools/test_bios_boot.py build/apokolips-bl4-qemu-smoke.img
       - name: Upload BIOS bootloader images
         uses: actions/upload-artifact@v4
         with:
           name: apokolips-os-bios-bootloader-images
           path: |
             build/apokolips-bl1.img
-            build/apokolips-bl2-qemu-smoke.img
+            build/apokolips-bl4-qemu-smoke.img
           if-no-files-found: error
           retention-days: 14
