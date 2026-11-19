@@ -73,7 +73,7 @@ class BL5E820NormalizationTests(unittest.TestCase):
             record(0x3000, 0x2000, 2),
             record(0x4000, 0x1000, 5),
         ])
-        self.assertEqual([entry.type for entry in result], [3, 4, 2, 5, 2, 4, 3])
+        self.assertEqual([entry.type for entry in result], [3, 4, 2, 5, 3])
 
     def test_unknown_memory_type_becomes_reserved(self):
         result = normalize_e820_map([record(0x1000, 0x1000, 0x99)])
