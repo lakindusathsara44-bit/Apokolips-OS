@@ -1,7 +1,7 @@
 # Apokolips OS — BIOS Bootloader Specification
 
-**Status:** Active implementation specification — BL-1, BL-2, and BL-3 hosted/QEMU milestones implemented; Oracle VirtualBox validation pending  
-**Document version:** 0.2  
+**Status:** BL-1 to BL-3 implemented; BL-4 manifest validation implemented on the current development branch; CI and VirtualBox verification pending  
+**Document version:** 0.3  
 **Target architecture:** x86_64 / AMD64  
 **Initial firmware:** Legacy BIOS-compatible VirtualBox firmware  
 **Boot medium:** Disposable raw virtual-disk image  
@@ -13,7 +13,7 @@
 
 This document specifies the first boot path for Apokolips OS. It defines the disk-image layout, boot stages, initial CPU environment, loader responsibilities, error behaviour, and the contract that will eventually transfer control to the Apokolips kernel.
 
-The first implementation milestone is intentionally small: BIOS loads an original Apokolips OS boot sector, that sector loads our second stage, and the second stage displays a clear status message. Kernel loading and the transition to 64-bit mode are later milestones. They must not be treated as already implemented.
+The current implementation has an original BIOS Stage 1, a bounded Stage 2 region, E820 map discovery, and a versioned boot manifest. The manifest is validated before the loader proceeds to E820 discovery. Kernel loading and the transition to 64-bit mode are later milestones and are not implemented yet.
 
 The bootloader will be written specifically for Apokolips OS. It will not use another operating system's bootloader or copy code from another OS project.
 
@@ -78,10 +78,10 @@ The image builder is a host-side development tool, not part of the bootloader. I
 1. Create or validate the raw image size.
 2. Place the 512-byte Stage 1 binary at LBA 0.
 3. Pad and place Stage 2 in the reserved LBA 1–32 area.
-4. Write the manifest at LBA 33 when the manifest format is implemented.
-5. Place the kernel payload at the LBA declared in the manifest.
+4. Write and validate the version-1 manifest at LBA 33.
+5. Keep the current payload empty; future payload placement must follow the validated manifest fields.
 6. Check all component sizes and sector boundaries.
-7. Verify the boot signature and expected image offsets.
+7. Verify the boot signature, manifest fields, reserved bytes, checksum, and expected image offsets.
 8. Produce a report containing component sizes, LBAs, checksums, and image size.
 
 The first status-message milestone may use a fixed test image with the manifest and kernel area left unused. The image builder must still enforce the Stage 1 and Stage 2 layout.
@@ -141,14 +141,16 @@ The boot sector must not jump into Stage 2 after a failed or incomplete read.
 
 ### 6.1 Initial responsibilities
 
-The first Stage 2 implementation will:
-1. Establish its own known real-mode execution environment.
-2. Preserve the BIOS boot-drive number passed by Stage 1.
-3. Display an unmistakable message such as `APOKOLIPS OS: STAGE 2 LOADED`.
-4. Display a diagnostic if its expected entry conditions are not met, where detectable.
-5. Halt in a controlled loop.
+The current Stage 2 implementation:
+1. Establishes its own known real-mode execution environment.
+2. Preserves the BIOS boot-drive number passed by Stage 1.
+3. Reads the versioned manifest from LBA 33 using an EDD Disk Address Packet.
+4. Validates manifest magic, version, fixed header size, Stage 2 layout, flags, payload LBA arithmetic, reserved bytes, and CRC32.
+5. Halts on a failed manifest read or any invalid manifest field.
+6. Runs bounded BIOS E820 memory-map discovery only after the manifest is accepted.
+7. Prints diagnostics and halts in a controlled loop.
 
-The first Stage 2 milestone does not load a kernel. Reaching the message proves only that Stage 1 successfully transferred control to Stage 2.
+Stage 2 still does not load a kernel. A valid manifest and E820 report prove only the bootloader checks that have been tested.
 
 ### 6.2 Later responsibilities
 
@@ -166,35 +168,27 @@ After the Stage 1-to-Stage 2 transfer is reliable, Stage 2 may be extended to:
 
 Each capability must be implemented and tested as a separate milestone.
 
-## 7. Boot manifest format — planned
+## 7. Boot manifest format — version 1 implemented
 
-The manifest is reserved at LBA 33 in the initial image layout. Its binary format must be specified and versioned before kernel loading is implemented.
+The manifest is stored at LBA 33 and occupies exactly one 512-byte sector. Its complete binary layout, checksum variant, validation rules, and failure behaviour are specified in docs/BL4_BOOT_MANIFEST.md.
 
-The first proposed manifest contains:
-- Fixed magic bytes identifying an Apokolips boot manifest.
-- Manifest format version.
-- Header size and total manifest size.
-- Target architecture identifier (x86_64).
-- Kernel image format identifier.
-- Kernel payload starting LBA.
-- Kernel payload byte length.
-- Kernel payload sector count.
-- Kernel payload checksum algorithm identifier and checksum value.
-- Required boot protocol version.
-- Reserved fields that must be zero in version 1.
+Version 1 uses the ASCII magic APOKMAN1, little-endian fields, a 32-byte fixed header, and CRC-32/ISO-HDLC over the entire sector with the checksum field (offsets 28–31) treated as zero. All bytes after the 32-byte header must be zero.
 
-### 7.1 Validation requirements
+The fields describe the expected Stage 2 region and a future payload range. The current image declares no payload: payload sector count and payload CRC32 are both zero, and the future payload start is LBA 34.
 
-Stage 2 must reject a manifest if:
-- The magic or version is unsupported.
-- Header or total sizes are invalid.
-- Architecture or image format is unsupported.
-- The payload length is zero or exceeds the configured maximum.
-- LBA arithmetic overflows or points outside the image bounds known to the loader.
-- The checksum does not match.
-- Reserved fields violate the version's rules.
+### 7.1 Runtime validation
 
-The exact field offsets, widths, byte order, checksum algorithm, and maximum kernel size are **not yet frozen**. They must be recorded in a separate binary-format specification or a precise section of this document before code relies on them.
+Stage 2 reads LBA 33 into physical address 0x6000 and rejects the manifest unless:
+- The magic, version, header size, Stage 2 sector count, and flags match version 1.
+- Payload start LBA is at least 34.
+- A non-empty payload range does not overflow the 32-bit LBA field.
+- An empty payload has a zero payload checksum.
+- All 480 reserved bytes are zero.
+- The stored CRC32 matches the full 512-byte sector with the CRC field zeroed.
+
+The loader halts on a read failure or invalid metadata and does not continue to E820 discovery. The host-side builder applies corresponding structural and checksum validation.
+
+The loader does not yet know the boot device's capacity and does not read payload sectors. Device-capacity validation, payload loading, and payload CRC verification remain part of the later kernel-loading milestone. The arithmetic check is not a claim that an arbitrary future payload fits on every device.
 
 ## 8. Kernel image loading — planned
 
@@ -331,7 +325,7 @@ Required test cases:
 5. Stage 2 entry check: Stage 2 must display its own message only after control reaches its entry point.
 6. Rebuild repeatability: rebuilding from the same source and tool versions should produce a functionally identical image; byte-for-byte reproducibility is preferred and differences must be explained.
 
-Later tests must cover manifest corruption, checksum mismatch, invalid ELF headers, out-of-range segments, E820 edge cases, A20 verification, CPU feature absence, and failed long-mode setup.
+The BL-4 QEMU test covers valid-manifest acceptance and rejection of a deliberately corrupted manifest. Later tests must cover more malformed manifest fields, invalid ELF headers, out-of-range segments, E820 edge cases, A20 verification, CPU feature absence, and failed long-mode setup.
 
 ### 14.3 Test evidence
 
@@ -364,7 +358,7 @@ A source file existing or compiling is not proof that the bootloader works.
 | BL-1 | Original Stage 1 and Stage 2 image | 512-byte Stage 1, valid signature, fixed Stage 2 region, image-layout tests pass |
 | BL-2 | Bounded E820 memory-map collection | Stage 2 validates E820 response signatures/lengths and bounds the record buffer |
 | BL-3 | BIOS runtime smoke test | QEMU/SeaBIOS boots the image and Stage 2 reports a non-zero E820 count; run #30 reported 7 |
-| BL-4 | Manifest format and validation | Valid and invalid manifest tests pass, including checksum and range checks |
+| BL-4 | Version-1 manifest generation and validation | Host tests, QEMU valid/invalid manifest runtime checks, CRC and range checks pass |
 | BL-5 | E820 record validation and normalization | Malformed, overlapping, zero-length, and overflowing ranges are handled by documented rules |
 | BL-6 | Kernel image loading | Own minimal kernel image is loaded into a validated physical range |
 | BL-7 | Long-mode transition | CPU enters 64-bit mode and reports success under the target VM |
