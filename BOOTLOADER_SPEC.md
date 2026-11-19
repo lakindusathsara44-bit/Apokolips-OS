@@ -1,6 +1,6 @@
 # Apokolips OS — BIOS Bootloader Specification
 
-**Status:** BL-1 to BL-3 implemented; BL-4 manifest validation implemented on the current development branch; CI and VirtualBox verification pending  
+**Status:** BL-1 to BL-4 implemented and host/QEMU CI passed; Oracle VirtualBox runtime verification pending  
 **Document version:** 0.3  
 **Target architecture:** x86_64 / AMD64  
 **Initial firmware:** Legacy BIOS-compatible VirtualBox firmware  
@@ -388,7 +388,7 @@ The version-1 boot-manifest layout and CRC32 algorithm are now frozen in docs/BL
 - Hosted verification: NASM assembly, image generation, and all 12 Python tests passed in GitHub Actions run #30.
 - QEMU/SeaBIOS runtime: Stage 2 reported 7 E820 entries in run #30.
 - Oracle VirtualBox runtime: pending.
-- BL-4: version-1 manifest generation and host validation are implemented; Stage 2 performs BIOS read, field/range/reserved-byte checks, and CRC32 validation before E820. CI verification is pending.
+- BL-4: version-1 manifest generation and host validation are implemented; Stage 2 performs BIOS read, field/range/reserved-byte checks, and CRC32 validation before E820. All 21 Python tests and positive/negative QEMU/SeaBIOS checks passed in GitHub Actions.
 - Kernel image loading, A20/GDT/page-table setup, long-mode transition, and kernel hand-off: not implemented.
 - Kernel: not implemented.
 - NASM 3.01, Python 3.14.4, and QEMU 10.2.1 were used in the passing hosted run; local Windows/VirtualBox toolchain settings remain unverified.
