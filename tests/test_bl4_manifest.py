@@ -113,5 +113,20 @@ class BL4ManifestTests(unittest.TestCase):
                 build(boot_file, stage2_file, output_file)
 
 
+    def test_stage2_validates_manifest_before_memory_map_discovery(self):
+        source_path = (
+            Path(__file__).resolve().parents[1]
+            / "bootloader" / "bios" / "stage2" / "stage2.asm"
+        )
+        source = source_path.read_text(encoding="utf-8")
+        self.assertLess(source.index("call read_manifest"), source.index("call detect_memory_map"))
+        self.assertIn("call validate_manifest", source)
+        self.assertIn("MANIFEST_MAGIC_0", source)
+        self.assertIn("MANIFEST_MAGIC_1", source)
+        self.assertIn("0xEDB88320", source)
+        self.assertIn("BL-4 ERROR: MANIFEST INVALID", source)
+        self.assertIn("BL-4: MANIFEST VALID", source)
+
+
 if __name__ == "__main__":
     unittest.main()
