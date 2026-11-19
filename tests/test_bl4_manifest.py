@@ -44,7 +44,7 @@ class BL4ManifestTests(unittest.TestCase):
 
     def test_rejects_manifest_checksum_corruption(self):
         manifest = bytearray(build_manifest())
-        manifest[100] ^= 0x01
+        manifest[16] ^= 0x01
         with self.assertRaisesRegex(ValueError, "CRC32 mismatch"):
             validate_manifest(bytes(manifest))
 
