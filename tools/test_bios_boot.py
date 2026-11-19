@@ -105,13 +105,13 @@ def run_bios_smoke_test(image_path: Path, timeout_seconds: float = 4.0) -> int:
             f"validation. Debug output was:\n{valid_output or '<empty>'}"
         )
 
-    # Corrupt a reserved byte in the manifest sector without updating its CRC.
-    # The guest must reject the image before attempting E820 discovery.
+    # Corrupt the payload-start field but leave its stored CRC unchanged.
+    # The altered range is still structurally valid, so rejection exercises CRC32.
     with tempfile.TemporaryDirectory(prefix="apokolips-invalid-manifest-") as temp_dir:
         invalid_image = Path(temp_dir) / "invalid-manifest.img"
         image_bytes = bytearray(image_path.read_bytes())
         manifest_offset = MANIFEST_LBA * SECTOR_SIZE
-        image_bytes[manifest_offset + 100] ^= 0x01
+        image_bytes[manifest_offset + 16] ^= 0x01
         invalid_image.write_bytes(image_bytes)
 
         invalid_output, invalid_stderr = capture_bios_output(
